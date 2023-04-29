@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios';
 import './App.css'
 import BookCreate from './components/BookCreate';
 import BookList from './components/BookList';
@@ -6,12 +7,24 @@ import BookList from './components/BookList';
 function App() {
   const [books, setBooks] = useState([]);
 
-  const createBook = (title) => {
-    const updatedBooks = [...books, {id: Math.round(Math.random() * 9999), title}]
+  const fetchBooks = async () => {
+    const response = await axios.get('http://localhost:5174/books');
+    setBooks(response.data);
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const createBook = async (title) => {
+    const response = await axios.post('http://localhost:5174/books', {title});
+
+    const updatedBooks = [...books, response.data];
     setBooks(updatedBooks)
   }
 
-  const deleteBookById = (id) => {
+  const deleteBookById = async (id) => {
+    await axios.delete(`http://localhost:5174/books/${id}`);
     const updatedBooks = books.filter((book) => {
       return book.id !== id;
     });
@@ -19,10 +32,13 @@ function App() {
     setBooks(updatedBooks);
   }
 
-  const editBookById = (id, newTitle) => {
+  const editBookById = async (id, newTitle) => {
+
+    const response = await axios.put(`http://localhost:5174/books/${id}`, {title: newTitle});
+
     const updatedBooks = books.map((book) => {
       if (book.id === id) {
-        return {...book, title: newTitle}
+        return {...book, ...response.data}
       }
 
       return book;
